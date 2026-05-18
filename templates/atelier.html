@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Atelier — Vent Marseille</title>
+  <script src="https://www.gstatic.com/charts/loader.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #e0f7fa, #ffffff);
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: white;
+      padding: 35px;
+      border-radius: 20px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+      text-align: center;
+      width: 520px;
+    }
+
+    h1 {
+      color: #006064;
+    }
+
+    #chart {
+      width: 420px;
+      height: 320px;
+      margin: auto;
+    }
+
+    #status {
+      color: #555;
+      font-size: 15px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>Indicateur météo</h1>
+    <h2>Vitesse moyenne du vent à Marseille</h2>
+    <div id="chart"></div>
+    <p id="status"></p>
+  </div>
+
+  <script>
+    google.charts.load('current', { packages: ['gauge'] });
+    google.charts.setOnLoadCallback(init);
+
+    async function init() {
+      const response = await fetch('/marseille-vent');
+      const json = await response.json();
+
+      const valeurs = json.map(item => Number(item.wind_kmh));
+      const moyenne = valeurs.reduce((a, b) => a + b, 0) / valeurs.length;
+
+      const data = google.visualization.arrayToDataTable([
+        ['Label', 'Value'],
+        ['Vent km/h', Math.round(moyenne)]
+      ]);
+
+      const options = {
+        width: 420,
+        height: 320,
+        max: 100,
+        yellowFrom: 35,
+        yellowTo: 60,
+        redFrom: 60,
+        redTo: 100,
+        minorTicks: 5
+      };
+
+      const chart = new google.visualization.Gauge(document.getElementById('chart'));
+      chart.draw(data, options);
+
+      document.getElementById('status').textContent =
+        'Moyenne calculée sur ' + valeurs.length + ' mesures horaires via Open-Meteo.';
+    }
+  </script>
+</body>
+</html>
